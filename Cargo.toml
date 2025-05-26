@@ -31,6 +31,8 @@ description = "Ethereum Virtual Machine"
 [dependencies]
 primitive-types = { version = "0.12", default-features = false, features = ["rlp"] }
 sha3 = { version = "0.10", default-features = false }
+poseidon-rs = "0.0.8"
+lazy_static = "1.4.0"
 
 evm-interpreter = { version = "1.0.0-dev", path = "interpreter", default-features = false }
 

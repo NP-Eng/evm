@@ -126,6 +126,14 @@ pub enum ExitException {
 	#[cfg_attr(feature = "scale", codec(index = 14))]
 	MaxNonce,
 
+	/// Invalid shielding pool note
+	#[cfg_attr(feature = "scale", codec(index = 15))]
+	InvalidShieldingNote,
+
+	/// Merkle tree is full
+	#[cfg_attr(feature = "scale", codec(index = 16))]
+	MerkleTreeFull,
+
 	/// Other normal errors.
 	#[cfg_attr(feature = "scale", codec(index = 13))]
 	Other(Cow<'static, str>),

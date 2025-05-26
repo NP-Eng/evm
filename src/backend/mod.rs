@@ -11,11 +11,15 @@
 //! pushing/poping layers are dealt by extern functions), layers are handled
 //! internally inside a backend.
 
-mod overlayed;
+pub mod merkle;
+pub mod overlayed;
 
 pub use evm_interpreter::runtime::{RuntimeBackend, RuntimeBaseBackend, RuntimeEnvironment};
 
-pub use self::overlayed::{OverlayedBackend, OverlayedChangeSet};
+pub use self::{
+	merkle::{MerkleTree, HasHash},
+	overlayed::{OverlayedBackend, OverlayedChangeSet},
+};
 
 /// Backend with layers that can transactionally be committed or discarded.
 pub trait TransactionalBackend {

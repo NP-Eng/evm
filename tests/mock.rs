@@ -1,6 +1,11 @@
 extern crate evm;
 
-use evm::backend::{OverlayedChangeSet, RuntimeBaseBackend, RuntimeEnvironment};
+use evm::backend::{
+	OverlayedChangeSet, 
+	RuntimeBaseBackend, 
+	RuntimeEnvironment,
+	merkle::MerkleTree,
+};
 use primitive_types::{H160, H256, U256};
 use std::collections::BTreeMap;
 
@@ -16,6 +21,7 @@ pub struct MockAccount {
 #[derive(Clone, Debug, Default)]
 pub struct MockBackend {
 	pub state: BTreeMap<H160, MockAccount>,
+	pub merkle_tree: MerkleTree<H256>,
 }
 
 impl MockBackend {
@@ -48,6 +54,11 @@ impl MockBackend {
 
 		for address in changeset.deletes.clone() {
 			self.state.remove(&address);
+		}
+
+		for note in changeset.shielded_notes.clone() {
+			let result = self.merkle_tree.insert(note);
+			assert!(result.is_ok());
 		}
 	}
 }

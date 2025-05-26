@@ -1,3 +1,5 @@
+use primitive_types::{H160, U256};
+
 /// Runtime configuration.
 #[derive(Clone, Debug)]
 pub struct Config {
@@ -105,6 +107,10 @@ pub struct Config {
 	pub eip_1559_enabled: bool,
 	/// Selfdestruct deletet contract only if called in the same tx as creation [EIP-6780](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-6780.md)
 	pub suicide_only_in_same_tx: bool,
+	/// Special designated address for the shielding pool. This address has no private key.
+	pub shielding_pool_address: H160,
+	/// The fixed unit amount that can be deposited into the shielding pool.
+	pub shielding_unit: U256,
 }
 
 impl Config {
@@ -162,6 +168,8 @@ impl Config {
 			eip_5656_enabled: false,
 			eip_1559_enabled: false,
 			suicide_only_in_same_tx: false,
+			shielding_pool_address: H160::zero(),
+			shielding_unit: U256([1000000, 0, 0, 0]), // 10^6 Wei
 		}
 	}
 
@@ -219,6 +227,8 @@ impl Config {
 			eip_5656_enabled: false,
 			eip_1559_enabled: false,
 			suicide_only_in_same_tx: false,
+			shielding_pool_address: H160::zero(),
+			shielding_unit: U256([1000000, 0, 0, 0]), // 10^6 Wei
 		}
 	}
 
@@ -328,6 +338,8 @@ impl Config {
 			eip_5656_enabled,
 			eip_1559_enabled,
 			suicide_only_in_same_tx,
+			shielding_pool_address: H160::zero(),
+			shielding_unit: U256([1000000, 0, 0, 0]), // 10^6 Wei
 		}
 	}
 }

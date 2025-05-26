@@ -37,6 +37,7 @@ pub trait IntoCallCreateTrap {
 	/// An external signal.
 	type Interrupt;
 
+	#[allow(dead_code)]
 	/// Turn the current trap into either a call/create trap or an interrupt.
 	fn into_call_create_trap(self) -> Result<Opcode, Self::Interrupt>;
 }

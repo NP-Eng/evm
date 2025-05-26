@@ -11,7 +11,11 @@ use evm_interpreter::{
 };
 use primitive_types::{H160, H256, U256};
 
-use crate::{backend::TransactionalBackend, standard::Config, MergeStrategy};
+use crate::{
+	backend::{TransactionalBackend},
+	standard::Config,
+	MergeStrategy
+};
 
 #[derive(Clone, Debug)]
 pub struct OverlayedChangeSet {
@@ -23,6 +27,7 @@ pub struct OverlayedChangeSet {
 	pub storages: BTreeMap<(H160, H256), H256>,
 	pub transient_storage: BTreeMap<(H160, H256), H256>,
 	pub deletes: BTreeSet<H160>,
+	pub shielded_notes: Vec<H256>,
 }
 
 pub struct OverlayedBackend<'config, B> {
@@ -58,6 +63,7 @@ impl<'config, B> OverlayedBackend<'config, B> {
 				storages: self.substate.storages,
 				transient_storage: self.substate.transient_storage,
 				deletes: self.substate.deletes,
+				shielded_notes: self.substate.shielded_notes,
 			},
 		)
 	}
@@ -253,6 +259,12 @@ impl<B: RuntimeBaseBackend> RuntimeBackend for OverlayedBackend<'_, B> {
 		Ok(())
 	}
 
+	fn shield(&mut self, source: H160, value: U256, note: H256) -> Result<(), ExitError> {
+		self.withdrawal(source, value)?;
+		self.substate.shielded_notes.push(note);
+		Ok(())
+	}
+
 	fn inc_nonce(&mut self, address: H160) -> Result<(), ExitError> {
 		let new_nonce = self.nonce(address).saturating_add(U256::from(1));
 		self.substate.nonces.insert(address, new_nonce);
@@ -303,6 +315,9 @@ impl<'config, B: RuntimeBaseBackend> TransactionalBackend for OverlayedBackend<'
 				for address in child.creates {
 					self.substate.creates.insert(address);
 				}
+				for note in child.shielded_notes {
+					self.substate.shielded_notes.push(note);
+				}
 			}
 			MergeStrategy::Revert | MergeStrategy::Discard => {}
 		}
@@ -320,6 +335,7 @@ struct Substate {
 	transient_storage: BTreeMap<(H160, H256), H256>,
 	deletes: BTreeSet<H160>,
 	creates: BTreeSet<H160>,
+	shielded_notes: Vec<H256>,
 }
 
 impl Substate {
@@ -335,6 +351,7 @@ impl Substate {
 			transient_storage: Default::default(),
 			deletes: Default::default(),
 			creates: Default::default(),
+			shielded_notes: Default::default(),
 		}
 	}
 

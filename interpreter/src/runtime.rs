@@ -183,6 +183,10 @@ pub trait RuntimeBackend: RuntimeBaseBackend {
 		self.deposit(transfer.target, transfer.value);
 		Ok(())
 	}
+
+	/// Shield a note.
+	fn shield(&mut self, source: H160, value: U256, note: H256) -> Result<(), ExitError>;
+	
 	/// Increase the nonce value.
 	fn inc_nonce(&mut self, address: H160) -> Result<(), ExitError>;
 }

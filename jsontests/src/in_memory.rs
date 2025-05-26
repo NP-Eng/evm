@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use evm::{
 	backend::OverlayedChangeSet,
 	interpreter::runtime::{RuntimeBaseBackend, RuntimeEnvironment},
+	backend::{merkle::*, HasHash},
 };
 use primitive_types::{H160, H256, U256};
 
@@ -35,12 +36,40 @@ pub struct InMemorySuicideInfo {
 }
 
 #[derive(Clone, Debug)]
+pub struct NoteHash(H256);
+
+impl Default for NoteHash {
+	fn default() -> Self {
+		Self(H256::default())
+	}
+}
+
+impl HasHash for NoteHash {
+	fn hash(&self) -> H256 {
+		self.0
+	}
+
+	fn from_hash(hash: H256) -> Self {
+		Self(hash)
+	}
+}
+
+#[derive(Clone, Debug)]
 pub struct InMemoryBackend {
 	pub environment: InMemoryEnvironment,
 	pub state: BTreeMap<H160, InMemoryAccount>,
+	pub merkle: MerkleTree<NoteHash>,
 }
 
 impl InMemoryBackend {
+	pub fn new(environment: InMemoryEnvironment) -> Self {
+		Self {
+			environment,
+			state: BTreeMap::new(),
+			merkle: MerkleTree::new(20),
+		}
+	}
+
 	pub fn apply_overlayed(&mut self, changeset: &OverlayedChangeSet) {
 		for (address, balance) in changeset.balances.clone() {
 			self.state.entry(address).or_default().balance = balance;

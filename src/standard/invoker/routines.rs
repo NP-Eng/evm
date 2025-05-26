@@ -5,7 +5,7 @@ use evm_interpreter::{
 	opcode::Opcode,
 	runtime::{RuntimeBackend, RuntimeEnvironment, RuntimeState, SetCodeOrigin, Transfer},
 };
-use primitive_types::{H160, U256};
+use primitive_types::{H160, H256, U256};
 
 use crate::{
 	backend::TransactionalBackend,
@@ -16,7 +16,7 @@ use crate::{
 
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn make_enter_call_machine<H, R>(
-	_config: &Config,
+	config: &Config,
 	resolver: &R,
 	code_address: H160,
 	input: Vec<u8>,
@@ -32,7 +32,15 @@ where
 	handler.mark_hot(state.as_ref().context.address, None);
 
 	if let Some(transfer) = transfer {
-		handler.transfer(transfer)?;
+		if transfer.target == config.shielding_pool_address {
+			if input.len() != 32 {
+				return Err(ExitException::InvalidShieldingNote.into());
+			}
+			let note = H256::from_slice(&input);
+			handler.shield(transfer.source, transfer.value, note)?;
+		} else {
+			handler.transfer(transfer)?;
+		}
 	}
 
 	resolver.resolve_call(code_address, input, state, handler)
