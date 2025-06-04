@@ -127,11 +127,11 @@ pub enum ExitException {
 	MaxNonce,
 
 	/// Invalid shielding pool note
-	#[cfg_attr(feature = "scale", codec(index = 15))]
+	#[cfg_attr(feature = "scale", codec(index = 20))]
 	InvalidShieldingNote,
 
 	/// Merkle tree is full
-	#[cfg_attr(feature = "scale", codec(index = 16))]
+	#[cfg_attr(feature = "scale", codec(index = 21))]
 	MerkleTreeFull,
 
 	/// Other normal errors.
