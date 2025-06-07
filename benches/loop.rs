@@ -1,9 +1,62 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use evm::backend::{MemoryAccount, MemoryBackend, MemoryVicinity};
 use evm::executor::stack::{MemoryStackState, StackExecutor, StackSubstateMetadata};
-use evm::Config;
-use primitive_types::{H160, U256};
+use evm::{Config,};
+use primitive_types::{H160, U256, H256};
 use std::{collections::BTreeMap, str::FromStr};
+
+fn test_shielding() {
+	let config = Config::istanbul();
+	let vicinity = MemoryVicinity {
+		gas_price: U256::zero(),
+		origin: H160::default(),
+		chain_id: U256::one(),
+		block_hashes: Vec::new(),
+		block_number: Default::default(),
+		block_coinbase: Default::default(),
+		block_timestamp: Default::default(),
+		block_difficulty: Default::default(),
+		block_gas_limit: Default::default(),
+		block_base_fee_per_gas: U256::zero(),
+		block_randomness: None,
+		shielding_pool_root: H256::zero(),
+	};
+
+	// Create source account with some balance
+	let source_address = H160::from_str("0x1000000000000000000000000000000000000002").unwrap();
+	let mut state = BTreeMap::new();
+	state.insert(
+		source_address,
+		MemoryAccount {
+			nonce: U256::one(),
+			balance: U256::from(2000000), // 2M Wei
+			storage: BTreeMap::new(),
+			code: Vec::new(),
+		}
+	);
+
+	let mut backend = MemoryBackend::new(&vicinity, state);
+	let metadata = StackSubstateMetadata::new(u64::MAX, &config);
+	let state = MemoryStackState::new(metadata, &mut backend);
+	let precompiles = BTreeMap::new();
+	let mut executor = StackExecutor::new_with_precompiles(state, &config, &precompiles);
+
+	// Create a test note hash
+	let note_hash = H256::from_low_u64_be(12345);
+
+	// Execute shielding transaction
+	let (reason, output) = executor.transact_call(
+		source_address,
+		config.shielding_pool_address,
+		config.shielding_unit_amount,
+		note_hash.as_bytes().to_vec(),
+		u64::MAX,
+		Vec::new(),
+	);
+
+	println!("Shielding transaction result: {:?}", reason);
+	println!("Output: {:?}", output);
+}
 
 fn run_loop_contract() {
 	let config = Config::istanbul();
@@ -11,15 +64,16 @@ fn run_loop_contract() {
 	let vicinity = MemoryVicinity {
 		gas_price: U256::zero(),
 		origin: H160::default(),
+		chain_id: U256::one(),
 		block_hashes: Vec::new(),
 		block_number: Default::default(),
 		block_coinbase: Default::default(),
 		block_timestamp: Default::default(),
 		block_difficulty: Default::default(),
 		block_gas_limit: Default::default(),
-		chain_id: U256::one(),
 		block_base_fee_per_gas: U256::zero(),
 		block_randomness: None,
+		shielding_pool_root: H256::zero(),
 	};
 
 	let mut state = BTreeMap::new();
@@ -61,7 +115,8 @@ fn run_loop_contract() {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-	c.bench_function("loop contract", |b| b.iter(run_loop_contract));
+	// c.bench_function("loop", |b| b.iter(|| run_loop_contract()));
+	c.bench_function("shield", |b| b.iter(|| test_shielding()));
 }
 
 criterion_group!(benches, criterion_benchmark);

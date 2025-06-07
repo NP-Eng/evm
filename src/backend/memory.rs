@@ -2,6 +2,7 @@ use super::{Apply, ApplyBackend, Backend, Basic, Log};
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 use primitive_types::{H160, H256, U256};
+use super::merkle_tree::MerkleTree;
 
 /// Vicinity value of a memory backend.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -36,6 +37,8 @@ pub struct MemoryVicinity {
 	/// In Ethereum, this is the randomness beacon provided by the beacon
 	/// chain and is only enabled post Merge.
 	pub block_randomness: Option<H256>,
+	/// Current merkle tree root of the shielding pool
+	pub shielding_pool_root: H256,
 }
 
 /// Account information of a memory backend.
@@ -63,6 +66,7 @@ pub struct MemoryBackend<'vicinity> {
 	state: BTreeMap<H160, MemoryAccount>,
 	/// Account transient storage (discarded after every transaction. (see EIP-1153))
 	transient_storage: BTreeMap<(H160, H256), H256>,
+	merkle_tree: MerkleTree<H256>,
 	logs: Vec<Log>,
 }
 
@@ -73,6 +77,7 @@ impl<'vicinity> MemoryBackend<'vicinity> {
 			vicinity,
 			state,
 			transient_storage: Default::default(),
+			merkle_tree: MerkleTree::default(),
 			logs: Vec::new(),
 		}
 	}
@@ -170,6 +175,7 @@ impl Backend for MemoryBackend<'_> {
 	fn original_storage(&self, address: H160, index: H256) -> Option<H256> {
 		Some(self.storage(address, index))
 	}
+
 }
 
 impl ApplyBackend for MemoryBackend<'_> {
@@ -230,6 +236,9 @@ impl ApplyBackend for MemoryBackend<'_> {
 				}
 				Apply::Delete { address } => {
 					self.state.remove(&address);
+				}
+				Apply::Shielding { note } => {
+					let _ = self.merkle_tree.insert(note.hash);
 				}
 			}
 		}

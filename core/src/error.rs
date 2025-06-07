@@ -180,6 +180,15 @@ pub enum ExitError {
 	/// https://eips.ethereum.org/EIPS/eip-2681
 	#[cfg_attr(feature = "with-codec", codec(index = 14))]
 	MaxNonce,
+
+	/// Invalid shielding note.
+	#[cfg_attr(feature = "with-codec", codec(index = 16))]
+	InvalidShieldingNote,
+
+	/// Merkle tree is full.
+	#[cfg_attr(feature = "with-codec", codec(index = 17))]
+	MerkleTreeFull,
+
 }
 
 impl From<ExitError> for ExitReason {

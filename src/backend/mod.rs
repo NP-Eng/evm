@@ -3,6 +3,7 @@
 //! Backends store state information of the VM, and exposes it to runtime.
 
 mod memory;
+mod merkle_tree;
 
 pub use self::memory::{MemoryAccount, MemoryBackend, MemoryVicinity};
 use alloc::vec::Vec;
@@ -19,6 +20,12 @@ pub struct Basic {
 	pub balance: U256,
 	/// Account nonce.
 	pub nonce: U256,
+}
+
+/// Shielded note.
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
+pub struct ShieldedNote {
+	pub hash: H256,
 }
 
 pub use ethereum::Log;
@@ -44,6 +51,12 @@ pub enum Apply<I> {
 	Delete {
 		/// Address.
 		address: H160,
+	},
+
+	/// Add a shielded note to the shielding pool (Merkle tree).
+	Shielding {
+		/// Shielded note in the merkle tree.
+		note: ShieldedNote,
 	},
 }
 

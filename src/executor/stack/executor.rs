@@ -221,6 +221,7 @@ pub trait StackState<'config>: Backend {
 	fn transfer(&mut self, transfer: Transfer) -> Result<(), ExitError>;
 	fn reset_balance(&mut self, address: H160);
 	fn touch(&mut self, address: H160);
+	fn shield(&mut self, source: H160, value: U256, note: H256) -> Result<(), ExitError>;
 
 	/// Fetch the code size of an address.
 	/// Provide a default implementation by fetching the code, but
@@ -966,11 +967,29 @@ impl<'config, 'precompiles, S: StackState<'config>, P: PrecompileSet>
 				let _ = self.exit_substate(StackExitKind::Failed);
 				return Capture::Exit((ExitReason::Error(e), Vec::new()));
 			}
-			match self.state.transfer(transfer) {
-				Ok(()) => (),
-				Err(e) => {
-					let _ = self.exit_substate(StackExitKind::Reverted);
-					return Capture::Exit((ExitReason::Error(e), Vec::new()));
+			if transfer.target == self.config.shielding_pool_address {
+				if input.len() != 32 {
+					return Capture::Exit((ExitError::InvalidShieldingNote.into(), Vec::new()));
+				}
+				if transfer.value != self.config.shielding_unit_amount {
+					return Capture::Exit((ExitError::InvalidShieldingNote.into(), Vec::new()));
+				}
+				let note = H256::from_slice(&input);
+				match self.state.shield(transfer.source, transfer.value, note) {
+					Ok(()) => (),
+					Err(e) => {
+						let _ = self.exit_substate(StackExitKind::Reverted);
+						return Capture::Exit((ExitReason::Error(e), Vec::new()));
+					}
+				}
+			}
+			else {
+				match self.state.transfer(transfer) {
+					Ok(()) => (),
+					Err(e) => {
+						let _ = self.exit_substate(StackExitKind::Reverted);
+						return Capture::Exit((ExitReason::Error(e), Vec::new()));
+					}
 				}
 			}
 		}

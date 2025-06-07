@@ -1,4 +1,4 @@
-use crate::backend::{Apply, Backend, Basic, Log};
+use crate::backend::{Apply, Backend, Basic, Log, ShieldedNote};
 use crate::executor::stack::executor::{Accessed, StackState, StackSubstateMetadata};
 use crate::{ExitError, Transfer};
 use alloc::{
@@ -26,6 +26,7 @@ pub struct MemoryStackSubstate<'config> {
 	transient_storage: BTreeMap<(H160, H256), H256>,
 	deletes: BTreeSet<H160>,
 	creates: BTreeSet<H160>,
+	shielded_notes: Vec<ShieldedNote>,
 }
 
 impl<'config> MemoryStackSubstate<'config> {
@@ -39,6 +40,7 @@ impl<'config> MemoryStackSubstate<'config> {
 			transient_storage: BTreeMap::new(),
 			deletes: BTreeSet::new(),
 			creates: BTreeSet::new(),
+			shielded_notes: Vec::new(),
 		}
 	}
 
@@ -126,6 +128,7 @@ impl<'config> MemoryStackSubstate<'config> {
 			transient_storage: BTreeMap::new(),
 			deletes: BTreeSet::new(),
 			creates: BTreeSet::new(),
+			shielded_notes: Vec::new(),
 		};
 		mem::swap(&mut entering, self);
 
@@ -404,6 +407,16 @@ impl<'config> MemoryStackSubstate<'config> {
 		Ok(())
 	}
 
+	pub fn shield<B: Backend>(&mut self, address: H160, value: U256, note: H256, backend: &B) -> Result<(), ExitError> {
+		let source = self.account_mut(address, backend);
+		if source.basic.balance < value {
+			return Err(ExitError::OutOfFund);
+		}
+		source.basic.balance -= value;
+		self.shielded_notes.push(ShieldedNote {hash: note,});
+		Ok(())
+	}
+
 	// Only needed for jsontests.
 	pub fn withdraw<B: Backend>(
 		&mut self,
@@ -513,6 +526,8 @@ impl<B: Backend> Backend for MemoryStackState<'_, '_, B> {
 
 		self.backend.original_storage(address, key)
 	}
+
+
 }
 
 impl<'config, B: Backend> StackState<'config> for MemoryStackState<'_, 'config, B> {
@@ -614,6 +629,10 @@ impl<'config, B: Backend> StackState<'config> for MemoryStackState<'_, 'config, 
 
 	fn touch(&mut self, address: H160) {
 		self.substate.touch(address, self.backend)
+	}
+
+	fn shield(&mut self, source: H160, value: U256, note: H256) -> Result<(), ExitError> {
+		self.substate.shield(source, value, note, self.backend)
 	}
 }
 
