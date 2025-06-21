@@ -239,6 +239,8 @@ impl ApplyBackend for MemoryBackend<'_> {
 				}
 				Apply::Shielding { note } => {
 					let _ = self.merkle_tree.insert(note.hash);
+					// TODO: handle merkle tree overflow
+					// TODO: do batch updates to merkle tree.
 				}
 			}
 		}

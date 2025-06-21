@@ -115,6 +115,10 @@ impl<'config> MemoryStackSubstate<'config> {
 			applies.push(Apply::Delete { address });
 		}
 
+		for note in self.shielded_notes {
+			applies.push(Apply::Shielding { note });
+		}
+
 		(applies, self.logs)
 	}
 
@@ -414,7 +418,7 @@ impl<'config> MemoryStackSubstate<'config> {
 		}
 		source.basic.balance -= value;
 		self.shielded_notes.push(ShieldedNote {hash: note,});
-		Ok(())
+		// Ok(())
 	}
 
 	// Only needed for jsontests.

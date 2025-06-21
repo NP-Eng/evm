@@ -1,3 +1,6 @@
+extern crate alloc;
+use alloc::vec::Vec;
+use alloc::vec;
 use primitive_types::H256;
 use sha3::{Keccak256, Digest};
 use evm_core::ExitError;
@@ -102,6 +105,10 @@ impl<T: Clone + HasHash> MerkleTree<T> {
         Ok(())
     }
 
+    #[allow(dead_code)]
+    pub fn size(&self) -> usize {
+        self.left_most_leaf - (1 << self.depth)
+    }
 }
 
 // Fixed recursive Default implementation

@@ -294,10 +294,10 @@ pub struct Config {
 	pub estimate: bool,
 	/// Has EIP-6780. See [EIP-6780](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-6780.md)
 	pub has_eip_6780: bool,
-	   /// Special designated address for the shielding pool. This address has no private key.
-	   pub shielding_pool_address: H160,
-	   /// The fixed unit amount that can be deposited into the shielding pool.
-	   pub shielding_unit_amount: U256,
+	/// Special designated address for the shielding pool. This address has no private key.
+	pub shielding_pool_address: H160,
+	/// The fixed unit amount that can be deposited into the shielding pool.
+	pub shielding_unit_amount: U256,
 }
 
 impl Config {
