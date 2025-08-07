@@ -355,7 +355,7 @@ impl Config {
 			has_mcopy: false,
 			estimate: false,
 			has_eip_6780: false,
-			shielding_pool_address: H160::zero(),
+			shielding_pool_address: H160([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16]),
             shielding_unit_amount: U256([1000000, 0, 0, 0]), // 10^6 Wei
 		}
 	}

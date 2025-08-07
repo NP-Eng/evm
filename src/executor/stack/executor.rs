@@ -976,7 +976,9 @@ impl<'config, 'precompiles, S: StackState<'config>, P: PrecompileSet>
 				}
 				let note = H256::from_slice(&input);
 				match self.state.shield(transfer.source, transfer.value, note) {
-					Ok(()) => (),
+					Ok(()) => {
+						()
+					},
 					Err(e) => {
 						let _ = self.exit_substate(StackExitKind::Reverted);
 						return Capture::Exit((ExitReason::Error(e), Vec::new()));

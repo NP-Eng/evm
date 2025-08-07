@@ -54,8 +54,7 @@ fn test_shielding() {
 		Vec::new(),
 	);
 
-	println!("Shielding transaction result: {:?}", reason);
-	println!("Output: {:?}", output);
+	// Note: reason and output are available for debugging if needed
 }
 
 fn run_loop_contract() {

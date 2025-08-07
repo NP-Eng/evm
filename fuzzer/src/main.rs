@@ -29,10 +29,7 @@ fn handle_data(sequence: &[u8]) {
 	let memory_limit = 10000;
 	let mut vm = Machine::new(Rc::new(code), Rc::new(data), stack_limit, memory_limit);
 	let res = vm.run();
-	#[cfg(not(fuzzing))]
-	{
-		println!("Result: {:?}", res);
-	}
+	// Note: res is available for debugging if needed
 }
 
 fn main() {
@@ -62,7 +59,6 @@ fn main() {
 			false => args[1..].to_vec(),
 		};
 		for argument in all_files {
-			println!("Now doing file {:?}", argument);
 			let mut buffer: Vec<u8> = Vec::new();
 			let mut f = File::open(argument).unwrap();
 			f.read_to_end(&mut buffer).unwrap();

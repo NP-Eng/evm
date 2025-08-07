@@ -418,7 +418,7 @@ impl<'config> MemoryStackSubstate<'config> {
 		}
 		source.basic.balance -= value;
 		self.shielded_notes.push(ShieldedNote {hash: note,});
-		// Ok(())
+		Ok(())
 	}
 
 	// Only needed for jsontests.
